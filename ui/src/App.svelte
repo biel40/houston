@@ -73,7 +73,7 @@
   bind:innerHeight={viewHeight}
 />
 
-<main class="card">
+<main class="card" class:maximized={host.maximized}>
   <Starfield />
   <div
     class="content"
@@ -116,7 +116,9 @@
   </div>
 </main>
 
-<ResizeHandles />
+{#if !host.maximized}
+  <ResizeHandles />
+{/if}
 
 {#if menu}
   <ContextMenu x={menu.x} y={menu.y} topmost={host.topmost} onclose={() => (menu = null)} />
@@ -131,6 +133,10 @@
     color: var(--text);
     user-select: none;
     cursor: default;
+  }
+  /* Maximized windows have square corners in Windows 11. */
+  .card.maximized {
+    border-radius: 0;
   }
   /* Drawn over the content so the 1px border never overlaps its padding. */
   .card::after {

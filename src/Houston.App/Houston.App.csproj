@@ -22,6 +22,8 @@
 
   <ItemGroup>
     <Content Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Loaded from disk by the tray icon (LoadImage), at the exact small-icon size. -->
+    <Content Include="Assets\houston.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

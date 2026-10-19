@@ -10,7 +10,7 @@ Idioma: la conversación con el usuario es en **español**; el código, los iden
 
 ## Principios de producto (no negociables)
 
-1. **No intrusivo.** Al cerrar la aplicación, desaparece del todo: sin icono en la bandeja, sin proceso residual, sin servicio, sin tarea programada, sin autoarranque. Al salir hay que liberar los sensores (`Computer.Close()`) para que el driver del kernel también se descargue.
+1. **No intrusivo.** Al cerrar la aplicación, desaparece del todo: el icono de la bandeja existe solo mientras la app está abierta, y no queda ningún proceso residual, sin servicio, sin tarea programada, sin autoarranque. Al salir hay que liberar los sensores (`Computer.Close()`) para que el driver del kernel también se descargue.
 2. **Ligero.** Presupuesto orientativo: < 1 % de CPU en reposo y < 100 MB de RAM entre todos los procesos (host + WebView2). Nada de polling frenético ni animaciones que mantengan la GPU ocupada sin motivo.
 3. **Simple.** Solo métricas útiles. Nada de gráficos recargados, ajustes infinitos ni telemetría. Cero conexiones de red.
 4. **Visual.** Las animaciones son parte del producto: valores interpolados (nunca saltan), transiciones suaves, estética coherente con Windows 11.
@@ -79,7 +79,8 @@ LibreHardwareMonitorLib ──► SensorService (C#, tick cada ~1000 ms)
 
 - Ventana sin bordes, pequeña, arrastrable desde cualquier zona libre, esquinas redondeadas, esquema claro/oscuro según Windows (en oscuro, fondo espacial; en claro, fondo claro con estrellas tenues).
 - Identidad: logo e icono del `.exe` con un Saturno V (`ui/src/assets/saturn-v.svg` → `tools/build-icon.ps1`); cada bloque se tiñe con el color de la marca de su componente.
-- Siempre encima (activable/desactivable). **Decisión del usuario (19/10/2026):** se comporta como una ventana normal de Windows: botones de minimizar y cerrar, redimensionable por bordes y esquinas, botón en la barra de tareas y en Alt+Tab. Al redimensionar se mantiene la proporción y el contenido escala. No hay botón de maximizar: no tiene sentido en un widget con proporción fija.
+- Siempre encima (activable/desactivable). **Decisión del usuario (19/10/2026):** se comporta como una ventana normal de Windows: botones de minimizar, maximizar/restaurar y cerrar, redimensionable por bordes y esquinas, botón en la barra de tareas y en Alt+Tab. Al redimensionar se mantiene la proporción y el contenido escala; maximizada ocupa el área de trabajo con el contenido centrado.
+- Icono en el área de notificación (bandeja) mientras la app está abierta: clic izquierdo muestra/restaura la ventana; clic derecho abre un menú nativo con *Mostrar Houston*, *Siempre visible* y *Cerrar Houston*. Se elimina al cerrar.
 - Menú contextual (clic derecho): *Siempre visible*, *Cerrar*. Nada más por ahora.
 - Recuerda la posición y el ancho en `%LOCALAPPDATA%\Houston\settings.json`. Es el único dato persistente permitido.
 - **Una sola instancia** (mutex con nombre).
@@ -131,4 +132,4 @@ dotnet run --project src/Houston.App   # requiere terminal elevado para ver todo
 
 ## Fuera de alcance (por ahora)
 
-RAM, disco, red y otras métricas · icono de bandeja · autoarranque · instalador/actualizaciones · ajustes avanzados · temas personalizables · multi-monitor avanzado.
+RAM, disco, red y otras métricas · autoarranque · instalador/actualizaciones · ajustes avanzados · temas personalizables · multi-monitor avanzado.

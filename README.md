@@ -33,7 +33,8 @@ Mensajería de WebView2 (`PostWebMessageAsJson` / `chrome.webview.postMessage`).
 | Dirección | `type` | Carga |
 |---|---|---|
 | host → UI | `sensors` | `data`: el contrato v1 de AGENTS.md, una vez por segundo |
-| host → UI | `window` | `topmost`: bool. Se envía al recibir `ready` y tras cada cambio |
+| host → UI | `window` | `topmost`, `maximized`: bool. Se envía al recibir `ready` y tras cada cambio |
+| UI → host | `toggleMaximize` | Maximiza o restaura la ventana |
 | UI → host | `ready` | La UI ya escucha |
 | UI → host | `drag` | Botón izquierdo pulsado: el host inicia el movimiento nativo de la ventana |
 | UI → host | `setTopmost` | `value`: bool |
@@ -181,7 +182,13 @@ Consecuencias aceptadas:
 - Redimensionado: la ventana lleva `ResizeMode="CanResize"` (necesita `WS_THICKFRAME`), pero con `AllowsTransparency` no tiene marco nativo, así que la UI dibuja unas franjas invisibles en los bordes y esquinas (`ResizeHandles.svelte`, con el cursor adecuado). Al pulsar una, el host lanza `WM_SYSCOMMAND` con `SC_SIZE + borde`, igual que el arrastre.
 - Proporción fija: el host intercepta `WM_SIZING`, limita el ancho a 200–720 DIP y calcula el alto con la proporción que le comunicó la UI (`size`), anclando el lado opuesto al que se arrastra. La UI escala el contenido con `transform: scale()` (layout a 300 px de ancho), así que texto, gauges y sparklines crecen juntos.
 - El ancho se guarda en `settings.json` al terminar de redimensionar; el alto se deduce de la proporción.
-- Botones de ventana en la cabecera: minimizar y cerrar (`WindowControls.svelte`). Los elementos con `data-nodrag` no inician el arrastre. No hay maximizar: en un widget con proporción fija no aporta nada.
+- Botones de ventana en la cabecera: minimizar, maximizar/restaurar y cerrar (`WindowControls.svelte`). Los elementos con `data-nodrag` no inician el arrastre.
+- Maximizar: el host responde a `WM_GETMINMAXINFO` con el área de trabajo del monitor; si no, una ventana sin bordes taparía la barra de tareas. Maximizada no se arrastra ni se redimensiona, las esquinas pasan a ser rectas y el contenido escala centrado (el fondo ocupa toda la ventana). A pantalla completa el renderizado por software cuesta más CPU por fotograma de animación; no se ha medido.
+- Icono de bandeja (`Interop/TrayIcon.cs`): `Shell_NotifyIcon` directo en vez del `NotifyIcon` de WinForms, para no cargar WinForms entero. El menú es nativo (`TrackPopupMenuEx`), así que toma el estilo de Windows 11. Detalles:
+  - La app corre elevada y Explorer no: sin `ChangeWindowMessageFilterEx`, UIPI descarta los clics que Explorer envía al icono.
+  - Se vuelve a añadir al recibir `TaskbarCreated` (Explorer reiniciado).
+  - Se elimina en `WM_DESTROY`. Si el proceso muere de golpe, el icono fantasma desaparece al pasar el ratón por encima (comportamiento de Windows).
+  - El `.ico` se copia a `Assets/` en la salida y se carga con `LoadImage` al tamaño de icono pequeño del sistema.
 - Al cerrar no queda ningún proceso `Houston` ni `msedgewebview2`. El proceso del navegador de WebView2 tarda normalmente menos de 2 s en salir y, en algún caso, unos segundos más.
 
 ### Mediciones del spike (sin sensores, página de prueba con un valor animado cada segundo)

@@ -27,6 +27,7 @@ internal sealed class UiBridge : IDisposable
     public event Action? DragRequested;
     public event Action? CloseRequested;
     public event Action? MinimizeRequested;
+    public event Action? MaximizeToggleRequested;
     public event Action<bool>? TopmostRequested;
     public event Action<bool>? MenuChanged;
 
@@ -48,8 +49,8 @@ internal sealed class UiBridge : IDisposable
         }
     }
 
-    public void PostWindowState(bool topmost) =>
-        PostJson(JsonSerializer.Serialize(new { type = "window", topmost }, JsonOptions));
+    public void PostWindowState(bool topmost, bool maximized) =>
+        PostJson(JsonSerializer.Serialize(new { type = "window", topmost, maximized }, JsonOptions));
 
     public void PostDismissMenu() => PostJson("""{"type":"dismissMenu"}""");
 
@@ -94,6 +95,9 @@ internal sealed class UiBridge : IDisposable
                 break;
             case "minimize":
                 MinimizeRequested?.Invoke();
+                break;
+            case "toggleMaximize":
+                MaximizeToggleRequested?.Invoke();
                 break;
             case "resize" when root.TryGetProperty("edge", out var edge)
                                && edge.TryGetInt32(out var side)

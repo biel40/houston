@@ -33,6 +33,7 @@ public partial class MainWindow : Window
     private bool _sizeApplied;
     private CoreWebView2Environment? _environment;
     private UiBridge? _bridge;
+    private TrayIcon? _tray;
 
     public MainWindow(AppSettings settings)
     {
@@ -40,6 +41,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
+        StateChanged += (_, _) => PostWindowState();
         _outsideClickWatch.Tick += OnOutsideClickWatchTick;
     }
 
@@ -83,7 +85,39 @@ public partial class MainWindow : Window
         _hwnd = new WindowInteropHelper(this).Handle;
         HwndSource.FromHwnd(_hwnd).AddHook(WndProc);
         RestorePosition();
+
+        _tray = new TrayIcon(_hwnd, Path.Combine(AppContext.BaseDirectory, "Assets", "houston.ico")) { Topmost = Topmost };
+        _tray.ShowRequested += ShowFromTray;
+        _tray.TopmostToggled += () => SetTopmost(!Topmost);
+        // Deferred: the menu runs inside this window's WndProc, which must return before the window goes away.
+        _tray.CloseRequested += () => Dispatcher.BeginInvoke(Close);
     }
+
+    private void ShowFromTray()
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
+        Activate();
+    }
+
+    private void SetTopmost(bool topmost)
+    {
+        Topmost = topmost;
+        if (_tray is not null)
+        {
+            _tray.Topmost = topmost;
+        }
+
+        PostWindowState();
+    }
+
+    private void ToggleMaximize() =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void PostWindowState() => _bridge?.PostWindowState(Topmost, WindowState == WindowState.Maximized);
 
     private void RestorePosition()
     {
@@ -114,6 +148,23 @@ public partial class MainWindow : Window
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {
+        if (_tray?.HandleMessage(msg, lParam) == true)
+        {
+            handled = true;
+            return 0;
+        }
+
+        if (msg == NativeMethods.WM_DESTROY)
+        {
+            _tray?.Dispose();
+            _tray = null;
+        }
+
+        if (msg == NativeMethods.WM_GETMINMAXINFO)
+        {
+            FitMaximizedToWorkArea(lParam);
+        }
+
         if (msg == NativeMethods.WM_SIZING && _aspect > 0)
         {
             var rect = Marshal.PtrToStructure<NativeMethods.Rect>(lParam);
@@ -124,6 +175,31 @@ public partial class MainWindow : Window
         }
 
         return 0;
+    }
+
+    // A borderless window maximizes over the whole monitor, taskbar included; limit it to the work area.
+    // Not marked handled, so WPF still applies its own track sizes afterwards.
+    private void FitMaximizedToWorkArea(nint lParam)
+    {
+        var monitor = NativeMethods.MonitorFromWindow(_hwnd, NativeMethods.MONITOR_DEFAULTTONEAREST);
+        var info = new NativeMethods.MonitorInfo { Size = (uint)Marshal.SizeOf<NativeMethods.MonitorInfo>() };
+        if (monitor == 0 || !NativeMethods.GetMonitorInfo(monitor, ref info))
+        {
+            return;
+        }
+
+        var minMax = Marshal.PtrToStructure<NativeMethods.MinMaxInfo>(lParam);
+        minMax.MaxPosition = new NativeMethods.Point
+        {
+            X = info.Work.Left - info.Monitor.Left,
+            Y = info.Work.Top - info.Monitor.Top,
+        };
+        minMax.MaxSize = new NativeMethods.Point
+        {
+            X = info.Work.Right - info.Work.Left,
+            Y = info.Work.Bottom - info.Work.Top,
+        };
+        Marshal.StructureToPtr(minMax, lParam, fDeleteOld: false);
     }
 
     // Applied while the user drags an edge: clamps the width and derives the height from the UI's aspect
@@ -196,16 +272,13 @@ public partial class MainWindow : Window
         core.NewWindowRequested += (_, args) => args.Handled = true;
 
         _bridge = new UiBridge(core, uiUri);
-        _bridge.Ready += () => _bridge?.PostWindowState(Topmost);
+        _bridge.Ready += PostWindowState;
         _bridge.DragRequested += BeginDrag;
         _bridge.CloseRequested += Close;
         _bridge.MinimizeRequested += () => WindowState = WindowState.Minimized;
+        _bridge.MaximizeToggleRequested += ToggleMaximize;
         _bridge.ResizeRequested += BeginResize;
-        _bridge.TopmostRequested += topmost =>
-        {
-            Topmost = topmost;
-            _bridge?.PostWindowState(Topmost);
-        };
+        _bridge.TopmostRequested += SetTopmost;
         _bridge.MenuChanged += open => _outsideClickWatch.IsEnabled = open;
         _bridge.SizeRequested += OnNaturalSizeKnown;
 
@@ -222,6 +295,13 @@ public partial class MainWindow : Window
         }
 
         _aspect = height / width;
+        // Setting the size of a maximized window would change its restore bounds instead; the next
+        // resize by the user re-applies the ratio.
+        if (WindowState != WindowState.Normal)
+        {
+            return;
+        }
+
         var target = _sizeApplied ? Width : _settings.WindowWidth ?? width;
         _sizeApplied = true;
         Width = Math.Clamp(target, MinWidthDip, MaxWidthDip);
@@ -287,6 +367,12 @@ public partial class MainWindow : Window
     // SendMessage returns once the user releases the button, so the final position is known here.
     private void BeginDrag()
     {
+        // A maximized window stays put, like one with a native title bar.
+        if (WindowState == WindowState.Maximized)
+        {
+            return;
+        }
+
         NativeMethods.GetWindowRect(_hwnd, out var before);
         NativeMethods.ReleaseCapture();
         NativeMethods.SendMessage(_hwnd, NativeMethods.WM_NCLBUTTONDOWN, NativeMethods.HTCAPTION, 0);
@@ -301,6 +387,11 @@ public partial class MainWindow : Window
     // Same hand-off as BeginDrag, for the system's sizing loop (SC_SIZE + the edge being grabbed).
     private void BeginResize(int edge)
     {
+        if (WindowState == WindowState.Maximized)
+        {
+            return;
+        }
+
         NativeMethods.GetWindowRect(_hwnd, out var before);
         NativeMethods.ReleaseCapture();
         NativeMethods.SendMessage(_hwnd, NativeMethods.WM_SYSCOMMAND, NativeMethods.SC_SIZE + edge, 0);

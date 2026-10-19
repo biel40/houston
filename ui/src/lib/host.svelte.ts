@@ -7,6 +7,7 @@ export const HISTORY_CAPACITY = 60
 class HostState {
   snapshot = $state<SensorSnapshot | null>(null)
   topmost = $state(true)
+  maximized = $state(false)
   // Replaced (not mutated) on every sample, so raw state is enough and avoids deep proxies.
   cpuHistory = $state.raw<number[]>([])
   gpuHistory = $state.raw<number[]>([])
@@ -32,6 +33,7 @@ export function connectHost(): () => void {
         break
       case 'window':
         host.topmost = message.topmost
+        host.maximized = message.maximized
         break
     }
   })

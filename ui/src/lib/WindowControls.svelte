@@ -1,11 +1,24 @@
 <script lang="ts">
   import { send } from './bridge'
+  import { host } from './host.svelte'
+
+  const maximizeLabel = $derived(host.maximized ? 'Restaurar' : 'Maximizar')
 </script>
 
 <!-- data-nodrag keeps a press on a button from starting the window drag (see App.svelte). -->
 <div class="controls" data-nodrag>
   <button class="minimize" type="button" aria-label="Minimizar" title="Minimizar" onclick={() => send({ type: 'minimize' })}>
     <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 5.5h8" /></svg>
+  </button>
+  <button type="button" aria-label={maximizeLabel} title={maximizeLabel} onclick={() => send({ type: 'toggleMaximize' })}>
+    <svg viewBox="0 0 10 10" aria-hidden="true">
+      {#if host.maximized}
+        <!-- Restore: front window bottom-left, the one behind peeking out top-right. -->
+        <path d="M1.5 3.5h5v5h-5z M3.5 3.5v-2h5v5h-2" />
+      {:else}
+        <path d="M1.5 1.5h7v7h-7z" />
+      {/if}
+    </svg>
   </button>
   <button class="close" type="button" aria-label="Cerrar" title="Cerrar" onclick={() => send({ type: 'close' })}>
     <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1L1 9" /></svg>
@@ -37,6 +50,7 @@
     stroke: currentColor;
     stroke-width: 1;
     stroke-linecap: round;
+    stroke-linejoin: round;
   }
   button:hover {
     background: var(--hover);

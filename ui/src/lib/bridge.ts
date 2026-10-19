@@ -2,7 +2,7 @@ import type { SensorSnapshot } from './types'
 
 export type HostMessage =
   | { type: 'sensors'; data: SensorSnapshot }
-  | { type: 'window'; topmost: boolean }
+  | { type: 'window'; topmost: boolean; maximized: boolean }
   | { type: 'dismissMenu' }
 
 /** Win32 WMSZ_* values: left, right, top, top-left, top-right, bottom, bottom-left, bottom-right. */
@@ -13,6 +13,7 @@ export type UiMessage =
   | { type: 'drag' }
   | { type: 'close' }
   | { type: 'minimize' }
+  | { type: 'toggleMaximize' }
   | { type: 'resize'; edge: ResizeEdge }
   | { type: 'setTopmost'; value: boolean }
   | { type: 'menu'; open: boolean }
