@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Source of both the widget logo and the .exe icon (tools/build-icon.ps1).
+       Keep to <path d fill opacity> and a single <g transform="rotate(a cx cy)">: that is all the
+       icon renderer understands. -->
+  <path d="M14 0 H50 A14 14 0 0 1 64 14 V50 A14 14 0 0 1 50 64 H14 A14 14 0 0 1 0 50 V14 A14 14 0 0 1 14 0 Z" fill="#0b1230"/>
+  <path d="M2 48 A14 14 0 1 0 30 48 A14 14 0 1 0 2 48 Z" fill="#24307a" opacity="0.7"/>
+  <path d="M40 14 A10 10 0 1 0 60 14 A10 10 0 1 0 40 14 Z" fill="#4b2f8f" opacity="0.45"/>
+  <path d="M11 14 A1.2 1.2 0 1 0 13.4 14 A1.2 1.2 0 1 0 11 14 Z" fill="#ffffff"/>
+  <path d="M21.3 8 A0.8 0.8 0 1 0 22.9 8 A0.8 0.8 0 1 0 21.3 8 Z" fill="#ffffff" opacity="0.8"/>
+  <path d="M7.3 30 A0.8 0.8 0 1 0 8.9 30 A0.8 0.8 0 1 0 7.3 30 Z" fill="#ffffff" opacity="0.7"/>
+  <path d="M45 52 A1 1 0 1 0 47 52 A1 1 0 1 0 45 52 Z" fill="#ffffff" opacity="0.9"/>
+  <path d="M55.3 36 A0.8 0.8 0 1 0 56.9 36 A0.8 0.8 0 1 0 55.3 36 Z" fill="#ffffff" opacity="0.7"/>
+  <path d="M38.4 5 A0.7 0.7 0 1 0 39.8 5 A0.7 0.7 0 1 0 38.4 5 Z" fill="#ffffff" opacity="0.6"/>
+  <g transform="rotate(45 32 32)">
+    <!-- Exhaust -->
+    <path d="M27.5 58 Q32 72 36.5 58 Z" fill="#ff7a1a"/>
+    <path d="M29.5 58 Q32 66 34.5 58 Z" fill="#ffd23f"/>
+    <!-- Launch escape tower and command module -->
+    <path d="M31.5 3 H32.5 L33 8 H31 Z" fill="#c9d1db"/>
+    <path d="M31 8 H33 L35.5 14 H28.5 Z" fill="#f2f4f7"/>
+    <!-- S-IVB, interstage, S-II, S-IC -->
+    <path d="M28.5 14 H35.5 V27 H28.5 Z" fill="#f2f4f7"/>
+    <path d="M28.5 19 H35.5 V21 H28.5 Z" fill="#1b1e24"/>
+    <path d="M28.5 27 H35.5 L37 30 H27 Z" fill="#f2f4f7"/>
+    <path d="M27 30 H37 V41 H27 Z" fill="#f2f4f7"/>
+    <path d="M27 39 H37 V41 H27 Z" fill="#1b1e24"/>
+    <path d="M27 41 H37 V55 H27 Z" fill="#f2f4f7"/>
+    <!-- Roll pattern -->
+    <path d="M27 41 H32 V48 H27 Z" fill="#1b1e24"/>
+    <path d="M32 48 H37 V55 H32 Z" fill="#1b1e24"/>
+    <!-- Fins and F-1 engines -->
+    <path d="M27 49 L23 57 H27 Z" fill="#aab3bf"/>
+    <path d="M37 49 L41 57 H37 Z" fill="#aab3bf"/>
+    <path d="M28 55 H36 L37 58 H27 Z" fill="#3a3f47"/>
+  </g>
+</svg>
