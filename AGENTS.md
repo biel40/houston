@@ -14,7 +14,7 @@ Idioma: la conversación con el usuario es en **español**; el código, los iden
 2. **Ligero.** Presupuesto orientativo: < 1 % de CPU en reposo y < 100 MB de RAM entre todos los procesos (host + WebView2). Nada de polling frenético ni animaciones que mantengan la GPU ocupada sin motivo.
 3. **Simple.** Solo métricas útiles. Nada de gráficos recargados, ajustes infinitos ni telemetría. Cero conexiones de red.
 4. **Visual.** Las animaciones son parte del producto: valores interpolados (nunca saltan), transiciones suaves, estética coherente con Windows 11.
-5. **Instalación fácil** (más adelante): un único instalador de un clic. Todavía **no** se trabaja en el instalador.
+5. **Instalación fácil.** Un único instalador MSI de un clic (`installer/`, WiX v6): sin asistente, instala por máquina en `Archivos de programaHouston`, crea un acceso directo en el menú Inicio y se desinstala desde *Configuración → Aplicaciones* sin dejar nada (salvo `settings.json`). **Decisión del usuario (19/10/2026):** se adelanta el instalador; las actualizaciones automáticas siguen fuera de alcance.
 
 ## Stack
 
@@ -42,6 +42,8 @@ Houston/
 │     ├─ Interop/            # mensajería host <-> UI
 │     ├─ app.manifest        # requireAdministrator
 │     └─ wwwroot/            # build de la UI (generado, no se edita a mano)
+├─ installer/                # MSI (WiX v6, fuera de Houston.sln)
+├─ tools/                    # build-icon.ps1, build-installer.ps1
 └─ ui/                       # proyecto Svelte + Vite
    ├─ src/
    └─ package.json
@@ -111,6 +113,9 @@ cd ui; npm run build                   # genera ../src/Houston.App/wwwroot
 # Host
 dotnet build Houston.sln -c Release
 dotnet run --project src/Houston.App   # requiere terminal elevado para ver todos los sensores
+
+# Instalador (genera publish/Houston-<versión>.msi)
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-installer.ps1
 ```
 
 ## Convenciones de código
@@ -131,4 +136,4 @@ dotnet run --project src/Houston.App   # requiere terminal elevado para ver todo
 
 ## Fuera de alcance (por ahora)
 
-RAM, disco, red y otras métricas · autoarranque · instalador/actualizaciones · ajustes avanzados · temas personalizables · multi-monitor avanzado.
+RAM, disco, red y otras métricas · autoarranque · actualizaciones automáticas · ajustes avanzados · temas personalizables · multi-monitor avanzado.

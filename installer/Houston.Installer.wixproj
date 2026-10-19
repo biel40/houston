@@ -1,0 +1,15 @@
+<Project Sdk="WixToolset.Sdk/6.0.2">
+
+  <!-- Packs the self-contained publish output into Houston.msi. Build it with tools/build-installer.ps1,
+       which publishes the app first; this project is not in Houston.sln for that reason. -->
+  <PropertyGroup>
+    <OutputName>Houston</OutputName>
+    <Platform>x64</Platform>
+    <PublishDir Condition="'$(PublishDir)' == ''">$(MSBuildThisFileDirectory)..\publish\Houston\</PublishDir>
+    <DefineConstants>PublishDir=$(PublishDir);IconFile=$(MSBuildThisFileDirectory)..\src\Houston.App\Assets\houston.ico</DefineConstants>
+    <!-- ICE61 flags AllowSameVersionUpgrades, which is deliberate: reinstalling a rebuilt MSI of the same
+         version replaces it instead of failing with "another version is already installed". -->
+    <SuppressIces>ICE61</SuppressIces>
+  </PropertyGroup>
+
+</Project>

@@ -7,6 +7,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <AssemblyName>Houston</AssemblyName>
+    <!-- Also the installer version (installer/Package.wxs reads it from Houston.exe). -->
+    <Version>0.1.0</Version>
     <RootNamespace>Houston.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- Generated from ui/src/assets/saturn-v.svg by tools/build-icon.ps1. -->

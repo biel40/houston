@@ -1,0 +1,55 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <!-- One-click install: no wizard pages, just the UAC prompt and a progress bar. Per-machine because the
+       app already runs elevated. The version comes from Houston.exe, so bumping <Version> in the app's
+       csproj is all a new release needs. -->
+  <Package
+    Name="Houston"
+    Manufacturer="Houston"
+    Version="!(bind.FileVersion.HoustonExe)"
+    UpgradeCode="093DDFBB-1E2A-419E-991F-F774C081905B"
+    Scope="perMachine"
+    Language="3082"
+    Codepage="1252">
+
+    <!-- A newer (or rebuilt) package replaces the installed one; never two copies side by side. -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="Ya hay instalada una versión más reciente de Houston." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="Houston.ico" SourceFile="$(IconFile)" />
+    <Property Id="ARPPRODUCTICON" Value="Houston.ico" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Houston" />
+    </StandardDirectory>
+
+    <Feature Id="Main">
+      <ComponentGroupRef Id="AppFiles" />
+    </Feature>
+
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <!-- Authored by hand so its Id can feed the package version above. The Start menu shortcut, the
+           only thing outside the install folder, hangs off the exe so it is removed along with it. -->
+      <Component>
+        <File Id="HoustonExe" Source="$(PublishDir)Houston.exe" KeyPath="yes">
+          <Shortcut
+            Id="HoustonShortcut"
+            Directory="ProgramMenuFolder"
+            Name="Houston"
+            Description="Monitor de CPU y GPU"
+            WorkingDirectory="INSTALLFOLDER"
+            Advertise="yes"
+            Icon="Houston.ico" />
+        </File>
+      </Component>
+      <Files Include="$(PublishDir)**">
+        <Exclude Files="$(PublishDir)Houston.exe" />
+        <Exclude Files="$(PublishDir)**\*.pdb" />
+        <Exclude Files="$(PublishDir)**\*.xml" />
+      </Files>
+    </ComponentGroup>
+
+    <StandardDirectory Id="ProgramMenuFolder" />
+  </Package>
+</Wix>
