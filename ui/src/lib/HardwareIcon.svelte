@@ -6,7 +6,7 @@
   let { kind }: Props = $props()
 </script>
 
-<!-- Generic glyphs on the brand color: vendor logos are trademarks, so only their colors are used. -->
+<!-- Generic component glyph on the brand color; the vendor's own mark is VendorLogo. -->
 <span class="badge" aria-hidden="true">
   <svg viewBox="0 0 16 16">
     {#if kind === 'cpu'}

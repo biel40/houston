@@ -33,7 +33,6 @@ No añadir Electron, Tauri, servidores HTTP/WebSocket ni frameworks de UI pesado
 ```
 Houston/
 ├─ AGENTS.md
-├─ PROMPT.md                 # primer encargo para el agente
 ├─ Houston.sln
 ├─ src/
 │  └─ Houston.App/           # WPF + WebView2 + sensores
@@ -123,7 +122,7 @@ dotnet run --project src/Houston.App   # requiere terminal elevado para ver todo
 
 ## Cómo trabajar
 
-1. Lee este archivo y `PROMPT.md`.
+1. Lee este archivo.
 2. Avanza por hitos pequeños y comprobables; tras cada uno, compila y ejecuta.
 3. **Verifica de verdad**: `dotnet build` limpio, `npm run build` limpio, y arranca la app para comprobar que los datos llegan y que cerrar la ventana deja **cero** procesos `Houston`/`msedgewebview2` huérfanos.
 4. Si algo es ambiguo o contradice estos principios, pregunta al usuario en vez de decidir en silencio.

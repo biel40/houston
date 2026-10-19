@@ -15,3 +15,10 @@ export function cleanName(name: string | null | undefined): string {
   if (!name) return '—'
   return name.replace(/\s*\((R|TM|C)\)/gi, '').replace(/\s+/g, ' ').trim()
 }
+
+/** "Intel Core Ultra 7 155H" → "Core Ultra 7 155H" when the vendor logo already says who made it. */
+export function withoutVendor(name: string, vendor: string | null | undefined): string {
+  const prefix = `${vendor} `.toLowerCase()
+  if (!vendor || !name.toLowerCase().startsWith(prefix)) return name
+  return name.slice(prefix.length).trim() || name
+}
