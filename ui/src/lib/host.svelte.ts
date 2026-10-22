@@ -1,4 +1,5 @@
 import { onHostMessage, send } from './bridge'
+import { layout } from './layout.svelte'
 import type { SensorSnapshot } from './types'
 
 /** One sample per second, so this is the last minute of load. */
@@ -34,6 +35,9 @@ export function connectHost(): () => void {
       case 'window':
         host.topmost = message.topmost
         host.maximized = message.maximized
+        break
+      case 'layout':
+        layout.restore(message.order, message.hidden)
         break
     }
   })

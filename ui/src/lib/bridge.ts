@@ -4,6 +4,7 @@ export type HostMessage =
   | { type: 'sensors'; data: SensorSnapshot }
   | { type: 'window'; topmost: boolean; maximized: boolean }
   | { type: 'dismissMenu' }
+  | { type: 'layout'; order: string[]; hidden: string[] }
 
 /** Win32 WMSZ_* values: left, right, top, top-left, top-right, bottom, bottom-left, bottom-right. */
 export type ResizeEdge = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
@@ -18,9 +19,12 @@ export type UiMessage =
   | { type: 'setTopmost'; value: boolean }
   | { type: 'menu'; open: boolean }
   | { type: 'size'; width: number; height: number }
+  | { type: 'layout'; order: string[]; hidden: string[] }
 
 // Absent when the page is opened in a regular browser; every call then becomes a no-op.
 const webview = window.chrome?.webview
+
+export const hasHost = webview != null
 
 export function send(message: UiMessage): void {
   webview?.postMessage(message)

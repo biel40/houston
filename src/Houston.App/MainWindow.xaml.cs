@@ -28,6 +28,10 @@ public partial class MainWindow : Window
     private readonly AppSettings _settings;
     private nint _hwnd;
 
+    // Re-sent whenever the page announces it is ready (it may reload during development).
+    private IReadOnlyList<string> _cardOrder;
+    private IReadOnlyList<string> _hiddenCards;
+
     // Height / width of the UI at scale 1. Resizing keeps it, so the content scales without letterboxing.
     private double _aspect;
     private bool _sizeApplied;
@@ -38,6 +42,8 @@ public partial class MainWindow : Window
     public MainWindow(AppSettings settings)
     {
         _settings = settings;
+        _cardOrder = settings.CardOrder ?? [];
+        _hiddenCards = settings.HiddenCards ?? [];
         InitializeComponent();
         SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
@@ -50,6 +56,9 @@ public partial class MainWindow : Window
     /// and the width in device-independent pixels.
     /// </summary>
     public event Action<int, int, double>? Placed;
+
+    /// <summary>Raised when the user reorders, hides or shows a card: the card ids in order, and those hidden.</summary>
+    public event Action<IReadOnlyList<string>, IReadOnlyList<string>>? LayoutChanged;
 
     /// <summary>Called from the sampling thread; serializes there and posts on the UI thread.</summary>
     public void ShowSnapshot(SensorSnapshot snapshot)
@@ -272,7 +281,17 @@ public partial class MainWindow : Window
         core.NewWindowRequested += (_, args) => args.Handled = true;
 
         _bridge = new UiBridge(core, uiUri);
-        _bridge.Ready += PostWindowState;
+        _bridge.Ready += () =>
+        {
+            PostWindowState();
+            _bridge?.PostLayout(_cardOrder, _hiddenCards);
+        };
+        _bridge.LayoutChanged += (order, hidden) =>
+        {
+            _cardOrder = order;
+            _hiddenCards = hidden;
+            LayoutChanged?.Invoke(order, hidden);
+        };
         _bridge.DragRequested += BeginDrag;
         _bridge.CloseRequested += Close;
         _bridge.MinimizeRequested += () => WindowState = WindowState.Minimized;

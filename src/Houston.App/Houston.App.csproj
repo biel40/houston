@@ -26,6 +26,8 @@
     <Content Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
     <!-- Loaded from disk by the tray icon (LoadImage), at the exact small-icon size. -->
     <Content Include="Assets\houston.ico" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Licence texts for the PawnIO driver and modules; the installer packs them with the app. -->
+    <Content Include="Licenses\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

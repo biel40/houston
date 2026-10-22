@@ -1,20 +1,26 @@
 <script lang="ts">
   import { send } from './bridge'
+  import { CARD_IDS, layout, type CardId } from './layout.svelte'
 
   interface Props {
     x: number
     y: number
+    /** 'end' puts the menu's right edge at x, to drop it below a button at the right of the header. */
+    align?: 'start' | 'end'
     topmost: boolean
     onclose: () => void
   }
 
-  let { x, y, topmost, onclose }: Props = $props()
+  let { x, y, align = 'start', topmost, onclose }: Props = $props()
+
+  const CARD_LABELS: Record<CardId, string> = { cpu: 'CPU', gpu: 'GPU' }
 
   const margin = 4
   let width = $state(0)
   let height = $state(0)
+  const anchorX = $derived(align === 'end' ? x - width : x)
   // Keep the menu inside the widget: the page cannot draw outside its own window.
-  const left = $derived(Math.max(margin, Math.min(x, window.innerWidth - width - margin)))
+  const left = $derived(Math.max(margin, Math.min(anchorX, window.innerWidth - width - margin)))
   const top = $derived(Math.max(margin, Math.min(y, window.innerHeight - height - margin)))
 
   // The widget never takes focus and WebView2 fires spurious mouseleave events, so the host watches
@@ -40,6 +46,25 @@
   bind:offsetHeight={height}
   onpointerdown={(e) => e.stopPropagation()}
 >
+  <div class="heading" aria-hidden="true">Tarjetas</div>
+  <!-- Stays open, so several cards can be toggled in a row and the window resizes behind the menu. -->
+  {#each CARD_IDS as id (id)}
+    {@const shown = !layout.hidden.includes(id)}
+    {@const last = shown && layout.visible.length === 1}
+    <button
+      role="menuitemcheckbox"
+      aria-checked={shown}
+      disabled={last}
+      title={last ? 'Al menos una tarjeta debe quedar visible' : undefined}
+      onclick={() => layout.setVisible(id, !shown)}
+    >
+      <svg class="check" class:visible={shown} viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M3 8.5l3 3 7-7" />
+      </svg>
+      {CARD_LABELS[id]}
+    </button>
+  {/each}
+  <div class="separator" role="separator"></div>
   <button role="menuitemcheckbox" aria-checked={topmost} onclick={toggleTopmost}>
     <svg class="check" class:visible={topmost} viewBox="0 0 16 16" aria-hidden="true">
       <path d="M3 8.5l3 3 7-7" />
@@ -52,7 +77,6 @@
     Cerrar
   </button>
 </div>
-
 <style>
   .menu {
     position: fixed;
@@ -80,8 +104,17 @@
     text-align: left;
     cursor: default;
   }
-  button:hover {
+  button:hover:enabled {
     background: var(--hover);
+  }
+  button:disabled {
+    color: var(--text-secondary);
+    opacity: 0.6;
+  }
+  .heading {
+    padding: 4px 10px 2px 28px;
+    color: var(--text-secondary);
+    font-size: 11px;
   }
   .check {
     width: 14px;

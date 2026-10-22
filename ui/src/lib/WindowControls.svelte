@@ -2,11 +2,34 @@
   import { send } from './bridge'
   import { host } from './host.svelte'
 
+  interface Props {
+    /** Opens the options menu below the button. */
+    onoptions: (anchor: DOMRect) => void
+  }
+
+  let { onoptions }: Props = $props()
+
   const maximizeLabel = $derived(host.maximized ? 'Restaurar' : 'Maximizar')
 </script>
 
 <!-- data-nodrag keeps a press on a button from starting the window drag (see App.svelte). -->
 <div class="controls" data-nodrag>
+  <!-- data-menu-anchor: a press here toggles the menu through onclick instead of just dismissing it. -->
+  <button
+    class="options"
+    type="button"
+    aria-label="Opciones"
+    title="Opciones"
+    aria-haspopup="menu"
+    data-menu-anchor
+    onclick={(e) => onoptions(e.currentTarget.getBoundingClientRect())}
+  >
+    <svg viewBox="0 0 10 10" aria-hidden="true">
+      <path d="M1 2.5h8M1 7.5h8" />
+      <circle cx="3.5" cy="2.5" r="1.1" />
+      <circle cx="6.5" cy="7.5" r="1.1" />
+    </svg>
+  </button>
   <button class="minimize" type="button" aria-label="Minimizar" title="Minimizar" onclick={() => send({ type: 'minimize' })}>
     <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 5.5h8" /></svg>
   </button>
@@ -51,6 +74,10 @@
     stroke-width: 1;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+  /* Sliders glyph: the knobs are filled so they read at 10px. */
+  .options circle {
+    fill: var(--card-background);
   }
   button:hover {
     background: var(--hover);

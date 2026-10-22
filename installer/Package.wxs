@@ -26,7 +26,44 @@
 
     <Feature Id="Main">
       <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="PawnIOOwnership" />
     </Feature>
+
+    <!-- PawnIO: the kernel driver LibreHardwareMonitor needs for CPU temperatures. Its official installer
+         travels inside this MSI and runs silently, so users never deal with it. PawnIO can be shared with
+         other tools (FanControl, LibreHardwareMonitor...), so Houston only removes it if Houston put it there. -->
+    <Binary Id="PawnIOSetup" SourceFile="$(PawnIOSetup)" />
+
+    <!-- Present when PawnIO is installed; its setup registers this key (and refuses to install over it). -->
+    <Property Id="PAWNIO_FOUND">
+      <RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PawnIO"
+                      Name="DisplayVersion" Type="raw" Bitness="always64" />
+    </Property>
+    <!-- Set when an earlier Houston installed PawnIO; read before a major upgrade removes the old version. -->
+    <Property Id="HOUSTON_OWNS_PAWNIO">
+      <RegistrySearch Root="HKLM" Key="SOFTWARE\Houston" Name="InstalledPawnIO" Type="raw" Bitness="always64" />
+    </Property>
+
+    <!-- Ownership marker: written when Houston installs PawnIO, and carried over by upgrades. -->
+    <Component Id="PawnIOOwnership" Directory="INSTALLFOLDER" Bitness="always64"
+               Condition="NOT PAWNIO_FOUND OR HOUSTON_OWNS_PAWNIO">
+      <RegistryValue Root="HKLM" Key="SOFTWARE\Houston" Name="InstalledPawnIO" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <!-- Return="ignore": without PawnIO Houston still works (temperatures show "—"), so a driver problem
+         must never fail or roll back the install. A pending reboot (3010) is left to Windows. -->
+    <CustomAction Id="InstallPawnIO" BinaryRef="PawnIOSetup" ExeCommand="-install -silent"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+    <CustomAction Id="UninstallPawnIO" BinaryRef="PawnIOSetup" ExeCommand="-uninstall -silent"
+                  Execute="deferred" Impersonate="no" Return="ignore" />
+
+    <InstallExecuteSequence>
+      <Custom Action="InstallPawnIO" Before="InstallFinalize"
+              Condition="NOT PAWNIO_FOUND AND NOT REMOVE" />
+      <!-- Not during an upgrade: the new version keeps using the same PawnIO. -->
+      <Custom Action="UninstallPawnIO" Before="InstallFinalize"
+              Condition="REMOVE=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE AND HOUSTON_OWNS_PAWNIO AND PAWNIO_FOUND" />
+    </InstallExecuteSequence>
 
     <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
       <!-- Authored by hand so its Id can feed the package version above. The Start menu shortcut, the

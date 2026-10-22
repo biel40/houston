@@ -37,6 +37,9 @@ internal sealed class UiBridge : IDisposable
     /// <summary>Natural content size in CSS pixels at scale 1, which equal WPF device-independent pixels at zoom 100 %.</summary>
     public event Action<double, double>? SizeRequested;
 
+    /// <summary>The user reordered, hid or showed a card: the card ids in order, and those hidden.</summary>
+    public event Action<IReadOnlyList<string>, IReadOnlyList<string>>? LayoutChanged;
+
     /// <summary>Thread-safe, so serialization can happen on the sampling thread.</summary>
     public static string SerializeSensors(SensorSnapshot snapshot) =>
         JsonSerializer.Serialize(new { type = "sensors", data = snapshot }, JsonOptions);
@@ -53,6 +56,9 @@ internal sealed class UiBridge : IDisposable
         PostJson(JsonSerializer.Serialize(new { type = "window", topmost, maximized }, JsonOptions));
 
     public void PostDismissMenu() => PostJson("""{"type":"dismissMenu"}""");
+
+    public void PostLayout(IReadOnlyList<string> order, IReadOnlyList<string> hidden) =>
+        PostJson(JsonSerializer.Serialize(new { type = "layout", order, hidden }, JsonOptions));
 
     public void Dispose()
     {
@@ -118,6 +124,39 @@ internal sealed class UiBridge : IDisposable
                              && height.TryGetDouble(out var h):
                 SizeRequested?.Invoke(w, h);
                 break;
+            case "layout" when TryReadCardIds(root, "order", out var order)
+                               && TryReadCardIds(root, "hidden", out var hidden):
+                LayoutChanged?.Invoke(order, hidden);
+                break;
         }
+    }
+
+    // Bounded so a misbehaving page cannot bloat settings.json; the UI has far fewer cards than this.
+    private static bool TryReadCardIds(JsonElement root, string property, out IReadOnlyList<string> ids)
+    {
+        const int maxCount = 16;
+        const int maxLength = 32;
+
+        ids = [];
+        if (!root.TryGetProperty(property, out var array)
+            || array.ValueKind != JsonValueKind.Array
+            || array.GetArrayLength() > maxCount)
+        {
+            return false;
+        }
+
+        var result = new List<string>();
+        foreach (var item in array.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.String || item.GetString() is not { Length: > 0 and <= maxLength } id)
+            {
+                return false;
+            }
+
+            result.Add(id);
+        }
+
+        ids = result;
+        return true;
     }
 }

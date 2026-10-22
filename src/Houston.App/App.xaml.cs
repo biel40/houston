@@ -34,6 +34,7 @@ public partial class App : Application
         _settings = SettingsStore.Load();
         var window = new MainWindow(_settings);
         window.Placed += OnWindowPlaced;
+        window.LayoutChanged += OnLayoutChanged;
         window.Closed += OnMainWindowClosed;
         window.Show();
 
@@ -72,6 +73,12 @@ public partial class App : Application
     private void OnWindowPlaced(int x, int y, double width)
     {
         _settings = _settings with { WindowX = x, WindowY = y, WindowWidth = width };
+        _pendingSave = SettingsStore.SaveAsync(_settings);
+    }
+
+    private void OnLayoutChanged(IReadOnlyList<string> order, IReadOnlyList<string> hidden)
+    {
+        _settings = _settings with { CardOrder = order, HiddenCards = hidden };
         _pendingSave = SettingsStore.SaveAsync(_settings);
     }
 

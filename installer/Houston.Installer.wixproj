@@ -6,7 +6,9 @@
     <OutputName>Houston</OutputName>
     <Platform>x64</Platform>
     <PublishDir Condition="'$(PublishDir)' == ''">$(MSBuildThisFileDirectory)..\publish\Houston\</PublishDir>
-    <DefineConstants>PublishDir=$(PublishDir);IconFile=$(MSBuildThisFileDirectory)..\src\Houston.App\Assets\houston.ico</DefineConstants>
+    <!-- Downloaded and hash-checked by tools/build-installer.ps1, which passes its path. -->
+    <PawnIOSetup Condition="'$(PawnIOSetup)' == ''">$(MSBuildThisFileDirectory)deps\PawnIO_setup-2.2.0.exe</PawnIOSetup>
+    <DefineConstants>PublishDir=$(PublishDir);IconFile=$(MSBuildThisFileDirectory)..\src\Houston.App\Assets\houston.ico;PawnIOSetup=$(PawnIOSetup)</DefineConstants>
     <!-- ICE61 flags AllowSameVersionUpgrades, which is deliberate: reinstalling a rebuilt MSI of the same
          version replaces it instead of failing with "another version is already installed". -->
     <SuppressIces>ICE61</SuppressIces>

@@ -6,6 +6,8 @@ Guía para agentes de IA (y humanos) que trabajen en este repositorio. Léela en
 
 Widget flotante para **Windows 11** que muestra métricas de hardware (por ahora **solo CPU y GPU**) de forma ligera, visual y con animaciones cuidadas. Es un CPUID/HWMonitor personal: más simple, más bonito, sin bloatware.
 
+**Para cualquier PC (decisión del usuario, 21/10/2026).** Houston debe instalarse y funcionar en cualquier equipo con Windows: CPU Intel o AMD, GPU NVIDIA, AMD o Intel, sobremesa o portátil de cualquier marca. El portátil del usuario es solo el banco de pruebas. Prioriza las fuentes genéricas (LibreHardwareMonitor y su driver, APIs de Windows) sobre los trucos de un fabricante o modelo concreto; una fuente específica solo vale como respaldo adicional. Al informar, distingue entre «verificado en el portátil de pruebas» y «esperado en otro hardware».
+
 Idioma: la conversación con el usuario es en **español**; el código, los identificadores, los commits y los comentarios técnicos van en **inglés**.
 
 ## Principios de producto (no negociables)
@@ -82,8 +84,9 @@ LibreHardwareMonitorLib ──► SensorService (C#, tick cada ~1000 ms)
 - Identidad: logo e icono del `.exe` con un Saturno V (`ui/src/assets/saturn-v.svg` → `tools/build-icon.ps1`); cada bloque se tiñe con el color de la marca de su componente.
 - Siempre encima (activable/desactivable). **Decisión del usuario (19/10/2026):** se comporta como una ventana normal de Windows: botones de minimizar, maximizar/restaurar y cerrar, redimensionable por bordes y esquinas, botón en la barra de tareas y en Alt+Tab. Al redimensionar se mantiene la proporción y el contenido escala; maximizada ocupa el área de trabajo con el contenido centrado.
 - Icono en el área de notificación (bandeja) mientras la app está abierta: clic izquierdo muestra/restaura la ventana; clic derecho abre un menú nativo con *Mostrar Houston*, *Siempre visible* y *Cerrar Houston*. Se elimina al cerrar.
-- Menú contextual (clic derecho): *Siempre visible*, *Cerrar*. Nada más por ahora.
-- Recuerda la posición y el ancho en `%LOCALAPPDATA%\Houston\settings.json`. Es el único dato persistente permitido.
+- Menú de opciones (botón de la cabecera y clic derecho, mismo menú): casillas *Tarjetas → CPU / GPU* para mostrar u ocultar cada tarjeta (siempre queda al menos una visible), *Siempre visible* y *Cerrar*. Nada más por ahora.
+- **Decisión del usuario (21/10/2026):** las tarjetas se reordenan arrastrando su icono (que se convierte en un asa al pasar el ratón) o con las flechas arriba/abajo cuando el asa tiene el foco. El host solo guarda el orden y las ocultas como ids opacos; la UI decide su significado.
+- Recuerda la posición, el ancho y la disposición de las tarjetas (orden y ocultas) en `%LOCALAPPDATA%\Houston\settings.json`. Es el único dato persistente permitido.
 - **Una sola instancia** (mutex con nombre).
 - Cierre limpio: detener el timer, `Computer.Close()`, `Application.Shutdown()`, sin hilos huérfanos.
 
@@ -93,6 +96,12 @@ LibreHardwareMonitorLib ──► SensorService (C#, tick cada ~1000 ms)
 - **Prohibido** crear servicios, tareas programadas o claves de autoarranque para evitar el UAC. Va contra el principio «no intrusivo».
 - Si no hay elevación o falla el driver, la app arranca igualmente, muestra lo que pueda (cargas) y deja «—» en el resto, sin diálogos de error molestos.
 - Comprobar qué driver usa la versión de LibreHardwareMonitorLib elegida (WinRing0 puede ser marcado por Windows Defender; versiones recientes usan PawnIO) y **documentar** la decisión.
+- **Decisión del usuario (21/10/2026): el MSI incluye PawnIO.** Es la única forma genérica de leer la temperatura de la CPU en cualquier PC.
+  - El MSI ejecuta el instalador oficial en silencio si PawnIO falta, y lo anota en `HKLM\SOFTWARE\Houston\InstalledPawnIO`.
+  - Solo lo desinstala si esa marca existe, y nunca durante una actualización. Si ya lo tenía otro programa, no lo toca.
+  - Un fallo de PawnIO nunca debe impedir instalar Houston.
+  - Excepción aceptada al principio «no intrusivo»: mientras Houston está instalado, el driver de PawnIO queda en el sistema aunque la app esté cerrada.
+  - Las licencias de PawnIO van en `src/Houston.App/Licenses/`. Detalles en el README («Instalador»).
 
 ## Riesgo técnico conocido: transparencia
 
