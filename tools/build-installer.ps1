@@ -28,6 +28,9 @@ if ((Get-FileHash $pawnIOSetup -Algorithm SHA256).Hash -ne $pawnIOSha256) {
     throw "PawnIO_setup.exe does not match the pinned SHA-256; deleted it. Check the release before retrying."
 }
 
+if (-not (Test-Path (Join-Path $root 'ui\node_modules'))) {
+    Invoke-Step 'Installing UI dependencies' { npm --prefix (Join-Path $root 'ui') ci }
+}
 Invoke-Step 'Building UI' { npm --prefix (Join-Path $root 'ui') run build }
 
 # Start clean so files removed from the app never linger in the installer.
